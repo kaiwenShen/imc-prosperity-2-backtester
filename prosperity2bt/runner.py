@@ -246,7 +246,6 @@ def run_backtest(
         state.traderData = trader_data
 
         prepare_state(state, data)
-
         stdout = StringIO()
 
         # Tee calls stdout.close(), making stdout.getvalue() impossible
@@ -258,6 +257,7 @@ def run_backtest(
                 orders, conversions, trader_data = trader.run(state)
         else:
             with redirect_stdout(stdout):
+
                 orders, conversions, trader_data = trader.run(state)
 
         sandbox_row = SandboxLogRow(
