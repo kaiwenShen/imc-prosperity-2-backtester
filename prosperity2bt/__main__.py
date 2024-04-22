@@ -7,6 +7,8 @@ from functools import partial, reduce
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from importlib import import_module, metadata, reload
 from pathlib import Path
+
+import numpy as np
 from prosperity2bt.data import BacktestData, read_day_data
 from prosperity2bt.file_reader import FileSystemReader, PackageResourcesReader
 from prosperity2bt.models import BacktestResult
@@ -139,20 +141,25 @@ def print_overall_summary(results: list[BacktestResult]) -> None:
     print(f"Profit summary:")
 
     total_profit = 0
+    total_profit_all = []
     for result in results:
         last_timestamp = result.activity_logs[-1].timestamp
 
         profit = 0
+        profit_all = []
         for row in reversed(result.activity_logs):
             if row.timestamp != last_timestamp:
                 break
 
             profit += row.columns[-1]
-
-        print(f"Round {result.round_num} day {result.day_num}: {profit:,.0f}")
+            profit_all.append(row.columns[-1])
+        print(f"Round {result.round_num} day {result.day_num}: {profit:,.0f}, Sharpe:{profit/np.std(profit_all):,.2f}, "
+              f"Zen score:{(profit/np.std(profit_all))**0.6*profit**0.4:,.2f}")
         total_profit += profit
+        total_profit_all.extend(profit_all)
 
-    print(f"Total profit: {total_profit:,.0f}")
+    print(f"Total profit: {total_profit:,.0f}, Sharpe:{total_profit/np.std(total_profit_all):,.2f}, "
+          f"Zen score:{(total_profit/np.std(total_profit_all))**0.6*total_profit**0.4:,.2f}\n")
 
 class HTTPRequestHandler(SimpleHTTPRequestHandler):
     def end_headers(self) -> None:
